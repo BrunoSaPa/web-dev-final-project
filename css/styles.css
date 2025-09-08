@@ -1,13 +1,12 @@
-/* css/styles.css */
 :root {
-  --primary-color: #84994f; /* Un verde oscuro */
-  --secondary-color: #fcb53b; /* Un café claro */
+  --primary-color: #84994f;
+  --secondary-color: #fcb53b;
   --fourth-color: #ffe797;
-  --third-color: #b45253; /* Un gris muy claro */
+  --third-color: #b45253;
   --text-color: #ffffff;
   --background-color: #e7e4c4;
   --navbar-bg-color: #84994fde;
-  --fifth-color: #117add; /* Un rojo oscuro */
+  --fifth-color: #117add;
 }
 
 body {
@@ -36,14 +35,12 @@ h5{
 p{
   font-weight: 500 !important;
 }
-/* Main container to hold background and content */
 .main-container {
   position: relative;
   min-height: 100vh;
   width: 100%;
 }
 
-/* Background image styling */
 .background-image {
   position: absolute;
   top: 0;
@@ -54,7 +51,6 @@ p{
   z-index: 1;
 }
 
-/* Semi-transparent green overlay */
 .overlay {
   position: absolute;
   top: 0;
@@ -65,7 +61,6 @@ p{
   z-index: 2;
 }
 
-/* Container for all page content, layered on top */
 .content-container {
   position: relative;
   z-index: 3;
@@ -74,7 +69,6 @@ p{
   min-height: 100vh;
 }
 
-/* Header and Navigation */
 .navbar-container {
   padding: 1rem 1rem;
   width: 100%;
@@ -132,11 +126,11 @@ nav {
 }
 
 .nav-links a:hover {
-  color: #d1d5db; /* Lighter gray for hover */
+  color: #d1d5db;
 }
 
 .mobile-menu-button {
-  display: none; /* Hidden by default, shown on mobile */
+  display: none;
   background: none;
   border: none;
   cursor: pointer;
@@ -148,7 +142,6 @@ nav {
   stroke: var(--text-color);
 }
 
-/* Hero Section */
 .hero-section {
   flex-grow: 1;
   display: flex;
@@ -162,7 +155,7 @@ nav {
 }
 
 .hero-content h1 {
-  font-size: 2.5rem; /* Base font size */
+  font-size: 2.5rem;
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.025em;
@@ -171,13 +164,13 @@ nav {
 .hero-content p {
   margin-top: 1.5rem;
   font-size: 1.25rem;
-  color: var(--text-color); /* Light gray */
+  color: var(--text-color);
 }
 
 .hero-button {
   margin-top: 2.5rem;
   display: inline-block;
-  background-color: var(--third-color); /* Teal-800 */
+  background-color: var(--third-color);
   color: var(--text-color);
   font-weight: bold;
   font-size: 1.125rem;
@@ -191,11 +184,10 @@ nav {
 }
 
 .hero-button:hover {
-  background-color: #aa3f41; /* Teal-700 */
+  background-color: #aa3f41;
   border-color: #a43234;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .nav-links {
     display: none;
