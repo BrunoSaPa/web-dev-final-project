@@ -221,14 +221,14 @@ a{
 }
 
 .catalog-text, .map-text, .learn-text, .template-text {
-  color: var(--third-color);
+  color: var(--secondary-color) !important;
   font-weight: bold;
   font-size: 3.5rem;
 }
 
 .btn-secondary{
   background-color: var(--secondary-color) !important;
-  color: var(--text-color) !important;
+  color: #FFFFFF !important;
   border: var(--fourth-color) !important;
   font-weight: bold !important;
 }
@@ -238,7 +238,7 @@ a{
 }
 .btn-primary{
   background-color: var(--third-color) !important;
-  color: var(--text-color) !important;
+  color: #FFFFFF !important;
   border: var(--fourth-color) !important;
   font-weight: bold !important;
 }
