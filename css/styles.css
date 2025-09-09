@@ -1,12 +1,11 @@
 :root {
-  --primary-color: #84994f;
-  --secondary-color: #fcb53b;
-  --fourth-color: #ffe797;
-  --third-color: #b45253;
-  --text-color: #ffffff;
-  --background-color: #e7e4c4;
-  --navbar-bg-color: #84994fde;
-  --fifth-color: #117add;
+  --primary-color: #2D5A27; 
+  --secondary-color: #E8A317; 
+  --third-color: #B91C1C; 
+  --fourth-color: #FEFEFE; 
+  --text-color: #1A1A1A; 
+  --background-color: #F8F9FA; 
+  --navbar-bg-color: #2D5A27E6; 
 }
 
 body {
@@ -15,6 +14,11 @@ body {
   font-family: "Roboto", sans-serif;
   background-color: var(--background-color) !important;
   color: var(--text-color);
+}
+
+h1{
+  font-weight: 800 !important;
+  color: var(--background-color) !important;
 }
 
 .card-title {
@@ -76,6 +80,8 @@ p{
   top: 0;
   z-index: 10;
   background-color: var(--navbar-bg-color);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 nav {
@@ -98,6 +104,9 @@ nav {
   text-decoration: none;
 }
 
+a{
+  text-decoration: none;
+}
 .logo:hover {
   background-color: rgba(255, 255, 255, 0.382);
 }
@@ -111,6 +120,8 @@ nav {
   display: flex;
   align-items: center;
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-links li {
@@ -118,7 +129,7 @@ nav {
 }
 
 .nav-links a {
-  color: var(--text-color);
+  color: var(--fourth-color);
   text-decoration: none;
   font-size: 1.125rem;
   font-weight: 500;
@@ -139,7 +150,7 @@ nav {
 .mobile-menu-button svg {
   width: 32px;
   height: 32px;
-  stroke: var(--text-color);
+  stroke: var(--fourth-color);
 }
 
 .hero-section {
