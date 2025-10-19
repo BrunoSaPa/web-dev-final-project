@@ -4,3 +4,7 @@ We discussed what wil the sections of the project would be and hould we would tr
 
 8 sept (Bruno)
 Changed the project's pallete, since the one we felt that the one we had before did not communicate what the scope of our project was in the best way. Also reworked some of the look and feel of some components of the project.
+
+
+19 oct (BRUNO)
+Initialized the project reestructuring the folders and created the new server so the endpoint / returns the index.ejs file.
