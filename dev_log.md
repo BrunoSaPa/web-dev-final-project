@@ -14,3 +14,6 @@ change all the files to a EJS format to use them as a template
 
 20 Oct (Mateo)
 Connect the server to the API's to have the infromation to fill the tamplates
+
+20 Oct (Nico)
+Responsiveness

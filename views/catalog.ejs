@@ -14,7 +14,7 @@
     <h2 class="text-center mb-4 catalog-text">Species Catalog</h2>
 
     <div class="text-center mb-4">
-      <div class="btn-group" role="group">
+      <div class="btn-group flex-wrap justify-content-center" role="group">
         <button type="button" class="btn btn-secondary">Mammals</button>
         <button type="button" class="btn btn-secondary">Birds</button>
         <button type="button" class="btn btn-secondary">Reptiles</button>
@@ -24,7 +24,7 @@
     <div class="row">
       <% if (typeof species !== 'undefined' && species && species.length > 0) { %>
         <% species.forEach(function(s) { %>
-          <div class="col-lg-4 col-md-6 mb-4">
+          <div class= "col-12 col-sm-6 col-md-6 col-lg-4 mb-4">
             <div class="card h-100 shadow">
               <img src="<%= s.image %>" class="card-img-top" alt="<%= s.commonName %>">
               <div class="card-body">
