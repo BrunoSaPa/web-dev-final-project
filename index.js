@@ -154,10 +154,20 @@ async function fetchEnciclovidaDetails(iucnSpecies) {
   }
 }
 
-// Redirect to page 1 of the catalog, keeping the limit if set
+// Redirect to page 1 of the catalog, keeping the limit and filter if set
 app.get('/catalog', (req, res) => {
   const limit = req.query.limit;
-  const suffix = (limit && parseInt(limit) > 0 && parseInt(limit) !== 15) ? `?limit=${parseInt(limit)}` : '';
+  const status = req.query.status;
+  const params = [];
+  
+  if (limit && parseInt(limit) > 0 && parseInt(limit) !== 15) {
+    params.push(`limit=${parseInt(limit)}`);
+  }
+  if (status) {
+    params.push(`status=${encodeURIComponent(status)}`);
+  }
+  
+  const suffix = params.length > 0 ? `?${params.join('&')}` : '';
   res.redirect(`/catalog/page/1${suffix}`);
 });
 
@@ -166,8 +176,17 @@ app.get('/catalog/page/:page', async (req, res) => {
   const pageParam = parseInt(req.params.page) || 1;
   const page = Math.max(1, pageParam);
   const limit = Math.max(1, parseInt(req.query.limit) || 15);
+  const statusFilter = req.query.status;
 
-  const totalItems = iucnSpeciesData.length;
+  //filter species by conservation status if provided
+  let filteredSpecies = iucnSpeciesData;
+  if (statusFilter) {
+    filteredSpecies = iucnSpeciesData.filter(species => 
+      species.categoria_lista_roja === statusFilter
+    );
+  }
+
+  const totalItems = filteredSpecies.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / limit));
 
   const currentPage = Math.min(page, totalPages);
@@ -175,7 +194,7 @@ app.get('/catalog/page/:page', async (req, res) => {
   const start = (currentPage - 1) * limit;
   const end = start + limit;
 
-  const speciesToFetch = iucnSpeciesData.slice(start, end);
+  const speciesToFetch = filteredSpecies.slice(start, end);
 
   const promises = speciesToFetch.map(species => fetchEnciclovidaDetails(species));
 
@@ -186,8 +205,10 @@ app.get('/catalog/page/:page', async (req, res) => {
       pagination: {
         page: currentPage,
         totalPages,
-        limit
-      }
+        limit,
+        status: statusFilter
+      },
+      currentFilter: statusFilter || 'all'
     });
 
   } catch (error) {
@@ -246,6 +267,7 @@ app.get('/contact', (req, res) => {
   res.render('contact');
 });
 
+//since we don't want to pay for a service :), we'll just log the contact form submissions to console
 app.post('/contact', (req, res) => {
   const { name, email, comment } = req.body;
   console.log('Contact form submission:', { name, email, comment });

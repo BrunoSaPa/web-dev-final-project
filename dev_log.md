@@ -17,3 +17,6 @@ Connect the server to the API's to have the infromation to fill the tamplates
 
 20 Oct (Nico)
 Responsiveness
+
+21 Oct (Bruno) 
+Made the featured endangered species actually fetch data from our api, and trim that to only 3 random records. And added filters to the explore page.
