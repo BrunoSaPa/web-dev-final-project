@@ -20,3 +20,6 @@ Responsiveness
 
 21 Oct (Bruno) 
 Made the featured endangered species actually fetch data from our api, and trim that to only 3 random records. And added filters to the explore page.
+
+21 (Nico)
+Change the buttons and carrousel. 

@@ -1,7 +1,7 @@
 :root {
   --primary-color: #2D5A27; 
   --secondary-color: #E8A317; 
-  --third-color: #B91C1C; 
+  --third-color: #b4512d; 
   --fourth-color: #FEFEFE; 
   --text-color: #1A1A1A; 
   --background-color: #F8F9FA; 
@@ -249,4 +249,38 @@ a{
 
 .list-template{
   background-color: var(--background-color) !important;
+}
+
+.carousel {
+  position: relative;
+}
+
+.carousel-inner {
+  position: relative;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) translateY(40px);
+  width: 5%;
+  z-index: 5;
+}
+
+.carousel-control-prev {
+  left: 15px;
+}
+
+.carousel-control-next {
+  right: 15px;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  background-size: 60%;
 }
