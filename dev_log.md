@@ -8,3 +8,9 @@ Changed the project's pallete, since the one we felt that the one we had before 
 
 19 oct (BRUNO)
 Initialized the project reestructuring the folders and created the new server so the endpoint / returns the index.ejs file.
+
+19 Oct (Mateo)
+change all the files to a EJS format to use them as a template
+
+20 Oct (Mateo)
+Connect the server to the API's to have the infromation to fill the tamplates
