@@ -52,58 +52,44 @@
 <section class="py-5">
   <div class="container">
     <h2 class="text-center mb-5">Featured Endangered Species</h2>
+    <% if (featuredSpecies && featuredSpecies.length > 0) { %>
     <div id="speciesCarousel" class="carousel slide" data-bs-ride="carousel">
       <div class="carousel-indicators">
-        <button type="button" data-bs-target="#speciesCarousel" data-bs-slide-to="0" class="active"></button>
-        <button type="button" data-bs-target="#speciesCarousel" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#speciesCarousel" data-bs-slide-to="2"></button>
+        <% featuredSpecies.forEach((species, index) => { %>
+          <button type="button" data-bs-target="#speciesCarousel" data-bs-slide-to="<%= index %>" class="<%= index === 0 ? 'active' : '' %>"></button>
+        <% }) %>
       </div>
       <div class="carousel-inner">
-        <div class="carousel-item active">
+        <% featuredSpecies.forEach((species, index) => { %>
+        <div class="carousel-item <%= index === 0 ? 'active' : '' %>">
           <div class="row align-items-center">
             <div class="col-md-6">
-              <img src="images/vaquita.jpg" class="d-block w-100 rounded" alt="Vaquita Porpoise">
+              <img src="<%= species.image %>" class="d-block w-100 rounded" alt="<%= species.commonName %>" style="max-height: 400px; object-fit: cover;">
             </div>
             <div class="col-md-6">
-              <h3 class="fw-bold mb-3">Vaquita Porpoise</h3>
-              <p class="lead">The world's most endangered marine mammal with fewer than 10 individuals remaining in Mexico's Gulf of California.</p>
+              <h3 class="fw-bold mb-3"><%= species.commonName %></h3>
+              <p class="text-muted mb-2"><em><%= species.scientificName %></em></p>
+              <% if (species.description) { %>
+                <p class="lead"><%= species.description.substring(0, 200) %><%= species.description.length > 200 ? '...' : '' %></p>
+              <% } else { %>
+                <p class="lead">An endangered species found in Mexico.</p>
+              <% } %>
               <div class="mb-3">
-                <span class="badge bg-danger me-2">Critically Endangered</span>
-                <span class="badge bg-info">Marine</span>
+                <% 
+                  let badgeClass = 'bg-secondary';
+                  const status = species.statusLabel.toLowerCase();
+                  if (status.includes('critically')) badgeClass = 'bg-danger';
+                  else if (status.includes('endangered')) badgeClass = 'bg-warning';
+                  else if (status.includes('vulnerable')) badgeClass = 'bg-info';
+                  else if (status.includes('near threatened')) badgeClass = 'bg-warning';
+                %>
+                <span class="badge <%= badgeClass %> me-2"><%= species.statusLabel %></span>
               </div>
+              <a href="/especie/<%= encodeURIComponent(species.scientificName) %>" class="btn btn-primary">Learn More</a>
             </div>
           </div>
         </div>
-        <div class="carousel-item">
-          <div class="row align-items-center">
-            <div class="col-md-6">
-              <img src="images/jaguar.jpg" class="d-block w-100 rounded" alt="Jaguar">
-            </div>
-            <div class="col-md-6">
-              <h3 class="fw-bold mb-3">Jaguar</h3>
-              <p class="lead">The largest cat in the Americas, jaguars face habitat loss and fragmentation across Mexico's forests.</p>
-              <div class="mb-3">
-                <span class="badge bg-warning me-2">Near Threatened</span>
-                <span class="badge bg-success">Terrestrial</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="carousel-item">
-          <div class="row align-items-center">
-            <div class="col-md-6">
-              <img src="images/monarch.jpg" class="d-block w-100 rounded" alt="Monarch Butterfly">
-            </div>
-            <div class="col-md-6">
-              <h3 class="fw-bold mb-3">Monarch Butterfly</h3>
-              <p class="lead">Famous for their incredible migration, monarch populations have declined by 80% in recent decades.</p>
-              <div class="mb-3">
-                <span class="badge bg-warning me-2">Endangered</span>
-                <span class="badge bg-primary">Migratory</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <% }) %>
       </div>
       <button class="carousel-control-prev" type="button" data-bs-target="#speciesCarousel" data-bs-slide="prev">
         <span class="carousel-control-prev-icon"></span>
@@ -112,6 +98,9 @@
         <span class="carousel-control-next-icon"></span>
       </button>
     </div>
+    <% } else { %>
+      <p class="text-center">Loading featured species...</p>
+    <% } %>
   </div>
 </section>
 

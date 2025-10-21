@@ -10,9 +10,32 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('views'));
 app.set('view engine', 'ejs');
 
-// Home page with empty weather data for now
-app.get('/', (req, res) => {
-    res.render('index', { weather: null, error: null });
+// Home page with random featured species
+app.get('/', async (req, res) => {
+    try {
+        // Get 3 random species from our data
+        const shuffled = [...iucnSpeciesData].sort(() => 0.5 - Math.random());
+        const randomSpecies = shuffled.slice(0, 3);
+        
+        // Fetch details for each random species
+        const featuredSpecies = await Promise.all(
+            randomSpecies.map(species => fetchEnciclovidaDetails(species))
+        );
+        
+        res.render('index', { 
+            weather: null, 
+            error: null,
+            featuredSpecies: featuredSpecies
+        });
+    } catch (error) {
+        console.error('Error fetching featured species:', error);
+        // Fallback to empty array if there's an error
+        res.render('index', { 
+            weather: null, 
+            error: null,
+            featuredSpecies: []
+        });
+    }
 });
 
 const iucnSpeciesData = require('./especies.json');
