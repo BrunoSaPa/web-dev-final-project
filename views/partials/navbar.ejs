@@ -1,20 +1,22 @@
 <div class="navbar-container">
-  <nav>
-    <a href="/" class="logo">
-      <img src="/images/logo.png" alt="Logo" />
-    </a>
+  <nav class="navbar navbar-expand-lg navbar-light w-100">
+    <div class="container-fluid">
+      <a href="/" class="navbar-brand">
+        <img src="/images/logo.png" alt="Logo" height="40" />
+      </a>
 
-    <ul class="nav-links">
-      <li><a href="/">Home</a></li>
-      <li><a href="/catalog">Explore</a></li>
-      <li><a href="/contact">Contact Us</a></li>
-      <li><a href="/learn">Learn More</a></li>
-    </ul>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-    <button class="mobile-menu-button" aria-label="Toggle Menu">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
-      </svg>
-    </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+          <li class="nav-item"><a href="/catalog" class="nav-link">Explore</a></li>
+          <li class="nav-item"><a href="/contact" class="nav-link">Contact Us</a></li>
+          <li class="nav-item"><a href="/learn" class="nav-link">Learn More</a></li>
+        </ul>
+      </div>
+    </div>
   </nav>
 </div>
