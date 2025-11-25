@@ -115,11 +115,7 @@ export default async function Home() {
                                                         if (status.includes('critically')) badgeClass = 'bg-danger';
                                                         else if (status.includes('endangered')) badgeClass = 'bg-warning';
                                                         else if (status.includes('vulnerable')) badgeClass = 'bg-info';
-                                                        else if (status.includes('near threatened')) badgeClass = 'bg-warning'; // EJS had warning for near threatened too? Let's check.
-                                                        // EJS line 84: else if (status.includes('near threatened')) badgeClass = 'bg-warning';
-                                                        // Wait, catalog.ejs line 50 says: else if (status.includes('near threatened')) badgeClass = 'bg-secondary';
-                                                        // I'll stick to EJS homepage logic for homepage, but maybe consistency is better.
-                                                        // I'll use what was in homepage.ejs.
+                                                        else if (status.includes('near threatened')) badgeClass = 'bg-warning'; 
                                                         return <span className={`badge ${badgeClass} me-2`}>{species.statusLabel}</span>;
                                                     })()}
                                                 </div>
