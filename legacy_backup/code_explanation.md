@@ -1,0 +1,1 @@
+Took the carousel example from: https://getbootstrap.com/docs/4.0/components/carousel/ 
