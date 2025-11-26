@@ -9,14 +9,20 @@ const handler = NextAuth({
         })
     ],
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({ token, user, account, profile }) {
             if (user) {
                 token.id = user.id
+                token.name = user.name
+                token.email = user.email
+                token.picture = user.image
             }
             return token
         },
         async session({ session, token }) {
             session.user.id = token.id
+            session.user.name = token.name
+            session.user.email = token.email
+            session.user.image = token.picture
             return session
         },
     },

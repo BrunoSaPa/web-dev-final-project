@@ -4,6 +4,8 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 
 export default function Navbar() {
     const { data: session, status } = useSession();
+    
+    console.log('Navbar session:', { status, session });
     return (
         <div className="navbar-container">
             <nav className="navbar navbar-expand-lg navbar-light w-100">
@@ -55,24 +57,37 @@ export default function Navbar() {
                                         role="button" 
                                         data-bs-toggle="dropdown"
                                     >
-                                        <img 
-                                            src={session.user.image} 
-                                            alt="Profile" 
-                                            className="rounded-circle me-2"
-                                            width="30" 
-                                            height="30"
-                                        />
-                                        {session.user.name}
+                                        {session.user?.image ? (
+                                            <img 
+                                                src={session.user.image} 
+                                                alt="Profile" 
+                                                className="rounded-circle me-2"
+                                                width="30" 
+                                                height="30"
+                                                onError={(e) => {
+                                                    console.log('Image failed to load:', session.user.image);
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextSibling.style.display = 'inline-flex';
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div 
+                                            className="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2 text-white"
+                                            style={{
+                                                width: '30px', 
+                                                height: '30px', 
+                                                fontSize: '12px',
+                                                display: session.user?.image ? 'none' : 'inline-flex'
+                                            }}
+                                        >
+                                            {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                        </div>
+                                        {session.user?.name || 'User'}
                                     </a>
                                     <ul className="dropdown-menu">
                                         <li>
                                             <Link className="dropdown-item" href="/profile">
                                                 <i className="bi bi-person me-2"></i>Profile
-                                            </Link>
-                                        </li>
-                                        <li>
-                                            <Link className="dropdown-item" href="/favorites">
-                                                <i className="bi bi-heart me-2"></i>Favorites
                                             </Link>
                                         </li>
                                         <li><hr className="dropdown-divider" /></li>
