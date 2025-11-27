@@ -41,7 +41,7 @@ export default function Profile() {
             
             try {
                 setLoading(true)
-                const response = await fetch(`/api/species?added_by=${encodeURIComponent(session.user.email)}&limit=100`)
+                const response = await apiCall(`/api/species?added_by=${encodeURIComponent(session.user.email)}&limit=100`)
                 if (response.ok) {
                     const data = await response.json()
                     setContributions(data.species || [])

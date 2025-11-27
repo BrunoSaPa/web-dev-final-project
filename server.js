@@ -13,6 +13,7 @@ app.use(express.json());
 
 // Species routes
 app.get('/api/species', async (req, res) => {
+    console.log('Received /api/species request with query:', req.query);
     const {
         page = 1,
         limit = 15,
@@ -123,8 +124,15 @@ app.get('/api/species', async (req, res) => {
 
         // Also filter by approved state unless explicitly requesting pending/rejected
         if (!state || state === '') {
-            // Default to approved species only
-            const approvedCondition = { state: 'approved' };
+            // Default to approved species only, but also include legacy documents without state
+            const approvedCondition = { 
+                $or: [
+                    { state: 'approved' },
+                    { state: { $exists: false } },
+                    { state: null }
+                ]
+            };
+
             if (Object.keys(query).length > 0) {
                 if (query.$and) {
                     query.$and.push(approvedCondition);
@@ -210,6 +218,16 @@ app.get('/api/species', async (req, res) => {
                 descripcion: s.descripcion || '',
                 ...taxonomy,
                 estados,
+                json_completo: s.json_completo,
+                top_lugares: s.top_lugares,
+                inat_id: s.inat_id,
+                gbif_id: s.gbif_id,
+                id_taxon_sis: s.id_taxon_sis,
+                foto_principal: s.foto_principal,
+                foto_1: s.foto_1,
+                foto_2: s.foto_2,
+                foto_3: s.foto_3,
+                foto_4: s.foto_4,
                 added_by: s.added_by,
                 state: s.state,
                 createdAt: s.createdAt

@@ -13,7 +13,8 @@ export default function Navbar() {
         const checkAdminStatus = async () => {
             if (session?.user?.email) {
                 try {
-                    const response = await apiCall('/api/admin/check');
+                    // Use direct fetch to hit Next.js API route instead of Express
+                    const response = await fetch('/api/admin/check');
                     if (response.ok) {
                         const data = await response.json();
                         setIsAdmin(data.isAdmin);
