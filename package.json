@@ -2,6 +2,7 @@
   "name": "temp_app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,6 +13,7 @@
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "mongoose": "^9.0.0",
     "next": "16.0.4",
     "next-auth": "^4.24.13",
     "react": "19.2.0",

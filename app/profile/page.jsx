@@ -122,60 +122,121 @@ export default function Profile() {
     }
 
     return (
-        <div className="container my-5">
-            <div className="row">
-                {/* Profile Header */}
-                <div className="col-12">
-                    <div className="card shadow mb-4">
-                        <div className="card-body text-center">
-                            {session.user?.image ? (
-                                <img 
-                                    src={session.user.image} 
-                                    alt="Profile" 
-                                    className="rounded-circle mb-3"
-                                    width="80" 
-                                    height="80"
-                                    onError={(e) => {
-                                        console.log('Profile image failed to load:', session.user.image);
-                                        e.target.style.display = 'none';
-                                        e.target.nextSibling.style.display = 'flex';
-                                    }}
-                                />
-                            ) : null}
-                            <div 
-                                className="rounded-circle bg-secondary d-flex align-items-center justify-content-center mb-3 mx-auto text-white"
-                                style={{
-                                    width: '80px', 
-                                    height: '80px', 
-                                    fontSize: '32px',
-                                    display: session.user?.image ? 'none' : 'flex'
-                                }}
-                            >
-                                {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                            </div>
-                            <h4 className="mb-1">{session.user?.name || 'User'}</h4>
-                            <p className="text-muted">{session.user?.email || 'No email available'}</p>
-                            <div className="d-flex justify-content-center gap-3">
-                                <div className="text-center">
-                                    <div className="h5 mb-0 text-success">{contributions.filter(c => c.status === 'accepted').length}</div>
-                                    <small className="text-muted">Species Added</small>
-                                </div>
-                                <div className="text-center">
-                                    <div className="h5 mb-0 text-warning">{contributions.filter(c => c.status === 'waiting').length}</div>
-                                    <small className="text-muted">Pending Review</small>
-                                </div>
-                                <div className="text-center">
-                                    <div className="h5 mb-0 text-primary">{contributions.length}</div>
-                                    <small className="text-muted">Total Submissions</small>
+        <>
+            <style>{`
+                .profile-page {
+                    background: linear-gradient(135deg, #F1F8E9 0%, #E8F5E9 100%);
+                    min-height: 100vh;
+                    padding: 3rem 0;
+                }
+                
+                .profile-header-card {
+                    background: white;
+                    border: 2px solid rgba(85, 139, 47, 0.2);
+                    border-radius: 12px;
+                }
+                
+                .profile-header-card h4 {
+                    color: #1B5E20 !important;
+                }
+                
+                .profile-header-card p {
+                    color: #558B2F;
+                }
+                
+                .nav-tabs {
+                    border-bottom: 2px solid rgba(85, 139, 47, 0.2) !important;
+                }
+                
+                .nav-tabs .nav-link {
+                    color: #558B2F !important;
+                    border: none;
+                    transition: all 0.3s ease;
+                }
+                
+                .nav-tabs .nav-link:hover {
+                    color: #1B5E20 !important;
+                    border-bottom: 3px solid #558B2F !important;
+                }
+                
+                .nav-tabs .nav-link.active {
+                    color: #1B5E20 !important;
+                    background-color: transparent;
+                    border-bottom: 3px solid #558B2F !important;
+                }
+                
+                .profile-card {
+                    background: white;
+                    border: 2px solid rgba(85, 139, 47, 0.2);
+                    border-radius: 12px;
+                }
+                
+                .profile-card .card-header {
+                    background: transparent;
+                    border-bottom: 2px solid rgba(85, 139, 47, 0.2);
+                }
+                
+                .stats-item h5 {
+                    color: #558B2F;
+                }
+            `}</style>
+            
+            <div className="profile-page">
+                <div className="container">
+                    <div className="row">
+                        {/* Profile Header */}
+                        <div className="col-12">
+                            <div className="card shadow-sm profile-header-card mb-4">
+                                <div className="card-body text-center">
+                                    {session.user?.image ? (
+                                        <img 
+                                            src={session.user.image} 
+                                            alt="Profile" 
+                                            className="rounded-circle mb-3"
+                                            width="80" 
+                                            height="80"
+                                            onError={(e) => {
+                                                console.log('Profile image failed to load:', session.user.image);
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling.style.display = 'flex';
+                                            }}
+                                        />
+                                    ) : null}
+                                    <div 
+                                        className="rounded-circle bg-success d-flex align-items-center justify-content-center mb-3 mx-auto text-white"
+                                        style={{
+                                            width: '80px', 
+                                            height: '80px', 
+                                            fontSize: '32px',
+                                            display: session.user?.image ? 'none' : 'flex',
+                                            background: 'linear-gradient(135deg, #558B2F 0%, #33691E 100%)'
+                                        }}
+                                    >
+                                        {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                    </div>
+                                    <h4 className="mb-1">{session.user?.name || 'User'}</h4>
+                                    <p className="text-muted">{session.user?.email || 'No email available'}</p>
+                                    <div className="d-flex justify-content-center gap-3">
+                                        <div className="text-center stats-item">
+                                            <div className="h5 mb-0" style={{ color: '#4CAF50' }}>{contributions.filter(c => c.status === 'accepted').length}</div>
+                                            <small className="text-muted">Species Added</small>
+                                        </div>
+                                        <div className="text-center stats-item">
+                                            <div className="h5 mb-0" style={{ color: '#FFA726' }}>{contributions.filter(c => c.status === 'waiting').length}</div>
+                                            <small className="text-muted">Pending Review</small>
+                                        </div>
+                                        <div className="text-center stats-item">
+                                            <div className="h5 mb-0" style={{ color: '#558B2F' }}>{contributions.length}</div>
+                                            <small className="text-muted">Total Submissions</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div className="col-12">
-                    <div className="card shadow">
-                        <div className="card-header">
+                        <div className="col-12">
+                            <div className="card shadow-sm profile-card">
+                                <div className="card-header">
                             <ul className="nav nav-tabs card-header-tabs" role="tablist">
                                 <li className="nav-item">
                                     <button 
@@ -202,9 +263,9 @@ export default function Profile() {
                                     </button>
                                 </li>
                             </ul>
-                        </div>
+                                </div>
 
-                        <div className="card-body">
+                                <div className="card-body">
                             {activeTab === 'profile' && (
                                 <div>
                                     <h5 className="mb-4">
@@ -458,10 +519,12 @@ export default function Profile() {
                                     </form>
                                 </div>
                             )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     )
 }
