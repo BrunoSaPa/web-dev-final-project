@@ -1,5 +1,3 @@
-import { connectToDatabase } from '../../../lib/mongodb';
-import Species from '../../../lib/models/Species';
 import SpeciesDetailClient from '../../components/SpeciesDetailClient';
 import { notFound } from 'next/navigation';
 
@@ -16,23 +14,27 @@ export async function generateMetadata({ params }) {
 }
 
 async function getSpecies(id) {
-    await connectToDatabase();
-    const decodedName = decodeURIComponent(id);
-
-    // Case insensitive search
-    const species = await Species.findOne({
-        nombre_cientifico: { $regex: new RegExp(`^${decodedName}$`, 'i') }
-    }).lean();
-
-    if (!species) return null;
-
-    // Serialize MongoDB object (convert _id and dates to strings)
-    return {
-        ...species,
-        _id: species._id.toString(),
-        createdAt: species.createdAt?.toISOString(),
-        updatedAt: species.updatedAt?.toISOString(),
-    };
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_EXPRESS_API_URL || 'http://localhost:3001';
+        const decodedName = decodeURIComponent(id);
+        
+        // Search for species by scientific name
+        const response = await fetch(`${baseUrl}/api/species?search=${encodeURIComponent(decodedName)}&limit=100`, {
+            cache: 'no-store'
+        });
+        
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        const species = data.species?.find(s => 
+            s.nombre_cientifico.toLowerCase() === decodedName.toLowerCase()
+        );
+        
+        return species || null;
+    } catch (error) {
+        console.error('Error fetching species:', error);
+        return null;
+    }
 }
 
 export default async function SpeciesPage({ params }) {

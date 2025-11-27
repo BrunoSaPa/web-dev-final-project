@@ -8,7 +8,8 @@ export default async function Home() {
     let featuredSpecies = [];
 
     try {
-        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+        // Use Express API server for server-side fetching
+        const baseUrl = process.env.NEXT_PUBLIC_EXPRESS_API_URL || 'http://localhost:3001';
         const response = await fetch(`${baseUrl}/api/species?page=1&limit=100`, {
             cache: 'no-store'
         });

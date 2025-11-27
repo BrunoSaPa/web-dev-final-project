@@ -1,9 +1,37 @@
 'use client'
 import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
+import { useState, useEffect } from 'react';
+import { apiCall } from '../../lib/apiUtils';
 
 export default function Navbar() {
     const { data: session, status } = useSession();
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [imageError, setImageError] = useState(false);
+    
+    useEffect(() => {
+        const checkAdminStatus = async () => {
+            if (session?.user?.email) {
+                try {
+                    const response = await apiCall('/api/admin/check');
+                    if (response.ok) {
+                        const data = await response.json();
+                        setIsAdmin(data.isAdmin);
+                    }
+                } catch (error) {
+                    console.error('Error checking admin status:', error);
+                }
+            } else {
+                setIsAdmin(false);
+            }
+        };
+
+        checkAdminStatus();
+    }, [session?.user?.email]);
+
+    useEffect(() => {
+        setImageError(false);
+    }, [session?.user?.image]);
     
     console.log('Navbar session:', { status, session });
     return (
@@ -51,37 +79,37 @@ export default function Navbar() {
                                 </li>
                             ) : session ? (
                                 <li className="nav-item dropdown">
-                                    <a 
-                                        className="nav-link dropdown-toggle d-flex align-items-center text-white" 
-                                        href="#" 
-                                        role="button" 
+                                    <a
+                                        className="nav-link dropdown-toggle text-white d-flex align-items-center"
+                                        href="#"
+                                        role="button"
                                         data-bs-toggle="dropdown"
+                                        aria-expanded="false"
                                     >
-                                        {session.user?.image ? (
-                                            <img 
-                                                src={session.user.image} 
-                                                alt="Profile" 
+                                        {session.user?.image && !imageError ? (
+                                            <img
+                                                src={session.user.image}
+                                                alt="Profile"
                                                 className="rounded-circle me-2"
-                                                width="30" 
-                                                height="30"
+                                                width="32"
+                                                height="32"
                                                 onError={(e) => {
-                                                    console.log('Image failed to load:', session.user.image);
-                                                    e.target.style.display = 'none';
-                                                    e.target.nextSibling.style.display = 'inline-flex';
+                                                    console.log('Profile image failed to load:', session.user?.image);
+                                                    setImageError(true);
                                                 }}
                                             />
-                                        ) : null}
-                                        <div 
-                                            className="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2 text-white"
-                                            style={{
-                                                width: '30px', 
-                                                height: '30px', 
-                                                fontSize: '12px',
-                                                display: session.user?.image ? 'none' : 'inline-flex'
-                                            }}
-                                        >
-                                            {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                                        </div>
+                                        ) : (
+                                            <div
+                                                className="rounded-circle bg-success d-flex align-items-center justify-content-center me-2 text-white"
+                                                style={{
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    fontSize: '14px'
+                                                }}
+                                            >
+                                                {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                            </div>
+                                        )}
                                         {session.user?.name || 'User'}
                                     </a>
                                     <ul className="dropdown-menu">
@@ -90,6 +118,13 @@ export default function Navbar() {
                                                 <i className="bi bi-person me-2"></i>Profile
                                             </Link>
                                         </li>
+                                        {isAdmin && (
+                                            <li>
+                                                <Link className="dropdown-item" href="/admin">
+                                                    <i className="bi bi-shield-check me-2"></i>Admin Panel
+                                                </Link>
+                                            </li>
+                                        )}
                                         <li><hr className="dropdown-divider" /></li>
                                         <li>
                                             <button 

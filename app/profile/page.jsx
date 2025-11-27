@@ -1,7 +1,8 @@
 'use client'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { apiCall } from '../../lib/apiUtils'
 
 export default function Profile() {
     const { data: session, status } = useSession({
@@ -16,71 +17,98 @@ export default function Profile() {
 
     const [activeTab, setActiveTab] = useState('profile')
     const [contributionForm, setContributionForm] = useState({
-        speciesName: '',
-        scientificName: '',
-        description: '',
-        location: '',
-        conservationStatus: 'Vulnerable',
-        habitat: '',
-        threats: '',
-        imageUrl: ''
+        nombre_cientifico: '',
+        nombre_comun: '',
+        categoria_lista_roja: 'Vulnerable',
+        descripcion: '',
+        foto_principal: '',
+        fotos: [],
+        id_taxon_sis: '',
+        inat_id: '',
+        gbif_id: '',
+        top_lugares: '',
+        added_by: '',
+        state: 'pending'
     })
 
-    //REMEMBER THIS IS NOT PERMAMENT, JUST FOR DEMO PURPOSES
-    const contributions = [
-        {
-            id: 1,
-            speciesName: "Vaquita Marina",
-            scientificName: "Phocoena sinus",
-            description: "The world's most endangered marine mammal, found only in the Gulf of California",
-            status: "accepted",
-            date: "2024-11-15",
-            location: "Gulf of California",
-            conservationStatus: "Critically Endangered",
-            habitat: "Shallow coastal waters",
-            threats: "Fishing nets, habitat loss"
-        },
-        {
-            id: 2,
-            speciesName: "Mexican Wolf",
-            scientificName: "Canis lupus baileyi",
-            description: "Also known as lobo, this is the most genetically distinct lineage of wolves in North America",
-            status: "waiting",
-            date: "2024-11-20",
-            location: "Sierra Madre Occidental",
-            conservationStatus: "Endangered",
-            habitat: "Mountain forests and grasslands",
-            threats: "Habitat fragmentation, human conflict"
-        },
-        {
-            id: 3,
-            speciesName: "Axolotl",
-            scientificName: "Ambystoma mexicanum",
-            description: "Endemic salamander known for its regenerative abilities, found only in Xochimilco",
-            status: "rejected",
-            date: "2024-11-10",
-            location: "Xochimilco, Mexico City",
-            conservationStatus: "Critically Endangered",
-            habitat: "Freshwater canals and lakes",
-            threats: "Water pollution, urbanization"
-        }
-    ]
+    const [contributions, setContributions] = useState([])
+    const [loading, setLoading] = useState(true)
 
-    const handleSubmitContribution = (e) => {
+    //fetch from database
+    useEffect(() => {
+        const fetchUserContributions = async () => {
+            if (!session?.user?.email) return
+            
+            try {
+                setLoading(true)
+                const response = await fetch(`/api/species?added_by=${encodeURIComponent(session.user.email)}&limit=100`)
+                if (response.ok) {
+                    const data = await response.json()
+                    setContributions(data.species || [])
+                } else {
+                    console.error('Failed to fetch contributions')
+                    setContributions([])
+                }
+            } catch (error) {
+                console.error('Error fetching contributions:', error)
+                setContributions([])
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchUserContributions()
+    }, [session?.user?.email])
+
+    const handleSubmitContribution = async (e) => {
         e.preventDefault()
-        //FINAL DATA SCHEMA WILL BE DESIGNED LATER, THIS IS JUST A SPACEHOLDER FOR NOW :)
-        console.log('New species contribution:', contributionForm)
-        alert('Species contribution submitted! It will be reviewed by our conservation team.')
-        setContributionForm({
-            speciesName: '',
-            scientificName: '',
-            description: '',
-            location: '',
-            conservationStatus: 'Vulnerable',
-            habitat: '',
-            threats: '',
-            imageUrl: ''
-        })
+        const submissionData = {
+            ...contributionForm,
+            added_by: session?.user?.email || 'anonymous',
+            state: 'pending'
+        }
+        
+        try {
+            const response = await apiCall('/api/species', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(submissionData)
+            })
+            
+            if (response.ok) {
+                alert('Species contribution submitted! It will be reviewed by our conservation team.')
+                //reset form
+                setContributionForm({
+                    nombre_cientifico: '',
+                    nombre_comun: '',
+                    categoria_lista_roja: 'Vulnerable',
+                    descripcion: '',
+                    foto_principal: '',
+                    fotos: [],
+                    id_taxon_sis: '',
+                    inat_id: '',
+                    gbif_id: '',
+                    top_lugares: '',
+                    added_by: '',
+                    state: 'pending'
+                })
+                // Refresh contributions
+                const contributionsResponse = await apiCall(`/api/species?added_by=${encodeURIComponent(session.user.email)}&limit=100`)
+                if (contributionsResponse.ok) {
+                    const data = await contributionsResponse.json()
+                    setContributions(data.species || [])
+                }
+                setActiveTab('contributions')
+            } else {
+                const error = await response.json()
+                alert('Error submitting species: ' + (error.message || 'Unknown error'))
+            }
+        } catch (error) {
+            console.error('Error submitting contribution:', error)
+            alert('Error submitting species. Please try again.')
+        }
     }
 
     if (status === 'loading') {
@@ -93,13 +121,13 @@ export default function Profile() {
         )
     }
 
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'accepted':
-                return <span className="badge bg-success">Accepted</span>
+    const getStatusBadge = (state) => {
+        switch (state) {
+            case 'approved':
+                return <span className="badge bg-success">Approved</span>
             case 'rejected':
                 return <span className="badge bg-danger">Rejected</span>
-            case 'waiting':
+            case 'pending':
                 return <span className="badge bg-warning text-dark">Pending Review</span>
             default:
                 return <span className="badge bg-secondary">Unknown</span>
@@ -195,34 +223,29 @@ export default function Profile() {
                                             className="rounded-circle mb-3"
                                             width="80" 
                                             height="80"
-                                            onError={(e) => {
-                                                console.log('Profile image failed to load:', session.user.image);
-                                                e.target.style.display = 'none';
-                                                e.target.nextSibling.style.display = 'flex';
-                                            }}
                                         />
-                                    ) : null}
-                                    <div 
-                                        className="rounded-circle bg-success d-flex align-items-center justify-content-center mb-3 mx-auto text-white"
-                                        style={{
-                                            width: '80px', 
-                                            height: '80px', 
-                                            fontSize: '32px',
-                                            display: session.user?.image ? 'none' : 'flex',
-                                            background: 'linear-gradient(135deg, #558B2F 0%, #33691E 100%)'
-                                        }}
-                                    >
-                                        {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                                    </div>
+                                    ) : (
+                                        <div 
+                                            className="rounded-circle bg-success d-flex align-items-center justify-content-center mb-3 mx-auto text-white"
+                                            style={{
+                                                width: '80px', 
+                                                height: '80px', 
+                                                fontSize: '32px',
+                                                background: 'linear-gradient(135deg, #558B2F 0%, #33691E 100%)'
+                                            }}
+                                        >
+                                            {session.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                        </div>
+                                    )}
                                     <h4 className="mb-1">{session.user?.name || 'User'}</h4>
                                     <p className="text-muted">{session.user?.email || 'No email available'}</p>
                                     <div className="d-flex justify-content-center gap-3">
                                         <div className="text-center stats-item">
-                                            <div className="h5 mb-0" style={{ color: '#4CAF50' }}>{contributions.filter(c => c.status === 'accepted').length}</div>
+                                            <div className="h5 mb-0" style={{ color: '#4CAF50' }}>{contributions.filter(c => c.state === 'approved').length}</div>
                                             <small className="text-muted">Species Added</small>
                                         </div>
                                         <div className="text-center stats-item">
-                                            <div className="h5 mb-0" style={{ color: '#FFA726' }}>{contributions.filter(c => c.status === 'waiting').length}</div>
+                                            <div className="h5 mb-0" style={{ color: '#FFA726' }}>{contributions.filter(c => c.state === 'pending').length}</div>
                                             <small className="text-muted">Pending Review</small>
                                         </div>
                                         <div className="text-center stats-item">
@@ -313,7 +336,14 @@ export default function Profile() {
                                         <span className="text-muted">{contributions.length} species submitted</span>
                                     </div>
 
-                                    {contributions.length === 0 ? (
+                                    {loading ? (
+                                        <div className="text-center py-5">
+                                            <div className="spinner-border text-success" role="status">
+                                                <span className="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p className="text-muted mt-3">Loading your contributions...</p>
+                                        </div>
+                                    ) : contributions.length === 0 ? (
                                         <div className="text-center py-5">
                                             <i className="bi bi-plus-circle display-4 text-muted"></i>
                                             <p className="text-muted mt-3">No species added yet. Help expand our conservation database!</p>
@@ -334,30 +364,30 @@ export default function Profile() {
                                                                 <div className="flex-grow-1">
                                                                     <div className="d-flex align-items-center mb-2">
                                                                         <i className="bi bi-bookmark-fill text-success me-2"></i>
-                                                                        <h6 className="mb-0 ms-2">{contribution.speciesName}</h6>
+                                                                        <h6 className="mb-0 ms-2">{contribution.nombre_comun}</h6>
                                                                         <div className="ms-auto">
-                                                                            {getStatusBadge(contribution.status)}
+                                                                            {getStatusBadge(contribution.state)}
                                                                         </div>
                                                                     </div>
-                                                                    <p className="text-muted fst-italic mb-2">{contribution.scientificName}</p>
-                                                                    <p className="text-muted mb-3">{contribution.description}</p>
+                                                                    <p className="text-muted fst-italic mb-2">{contribution.nombre_cientifico}</p>
+                                                                    <p className="text-muted mb-3">{contribution.descripcion}</p>
                                                                     <div className="row">
-                                                                        <div className="col-sm-3">
+                                                                        <div className="col-sm-4">
                                                                             <small className="text-muted">
                                                                                 <i className="bi bi-shield-exclamation me-1"></i>
-                                                                                {contribution.conservationStatus}
+                                                                                {contribution.categoria_lista_roja}
                                                                             </small>
                                                                         </div>
-                                                                        <div className="col-sm-3">
+                                                                        <div className="col-sm-4">
                                                                             <small className="text-muted">
                                                                                 <i className="bi bi-geo-alt me-1"></i>
-                                                                                {contribution.location}
+                                                                                {contribution.top_lugares}
                                                                             </small>
                                                                         </div>
-                                                                        <div className="col-sm-3">
+                                                                        <div className="col-sm-4">
                                                                             <small className="text-muted">
-                                                                                <i className="bi bi-tree me-1"></i>
-                                                                                {contribution.habitat}
+                                                                                <i className="bi bi-calendar me-1"></i>
+                                                                                {contribution.createdAt ? new Date(contribution.createdAt).toLocaleDateString() : 'N/A'}
                                                                             </small>
                                                                         </div>
                                                                         <div className="col-sm-3">
@@ -367,12 +397,12 @@ export default function Profile() {
                                                                             </small>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="mt-2">
-                                                                        <small className="text-muted">
-                                                                            <i className="bi bi-exclamation-triangle me-1"></i>
-                                                                            <strong>Threats:</strong> {contribution.threats}
-                                                                        </small>
-                                                                    </div>
+                                                                    {contribution.foto_principal ? (
+                                                                        <div className="mt-2 d-flex align-items-center">
+                                                                            <img src={contribution.foto_principal} alt={contribution.nombre_comun} style={{ width: 120, height: 'auto', borderRadius: 8 }} />
+                                                                            <div className="ms-3 text-muted small">{contribution.top_lugares}</div>
+                                                                        </div>
+                                                                    ) : null}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -402,8 +432,8 @@ export default function Profile() {
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    value={contributionForm.speciesName}
-                                                    onChange={(e) => setContributionForm({...contributionForm, speciesName: e.target.value})}
+                                                    value={contributionForm.nombre_comun}
+                                                    onChange={(e) => setContributionForm({...contributionForm, nombre_comun: e.target.value})}
                                                     placeholder="e.g., Mexican Wolf"
                                                     required
                                                 />
@@ -412,8 +442,8 @@ export default function Profile() {
                                                 <label className="form-label fw-bold">Conservation Status *</label>
                                                 <select
                                                     className="form-select"
-                                                    value={contributionForm.conservationStatus}
-                                                    onChange={(e) => setContributionForm({...contributionForm, conservationStatus: e.target.value})}
+                                                    value={contributionForm.categoria_lista_roja}
+                                                    onChange={(e) => setContributionForm({...contributionForm, categoria_lista_roja: e.target.value})}
                                                     required
                                                 >
                                                     <option value="Critically Endangered">Critically Endangered</option>
@@ -430,9 +460,9 @@ export default function Profile() {
                                             <input
                                                 type="text"
                                                 className="form-control"
-                                                value={contributionForm.scientificName}
-                                                onChange={(e) => setContributionForm({...contributionForm, scientificName: e.target.value})}
-                                                placeholder="e.g., Canis lupus baileyi"
+                                                    value={contributionForm.nombre_cientifico}
+                                                    onChange={(e) => setContributionForm({...contributionForm, nombre_cientifico: e.target.value})}
+                                                    placeholder="e.g., Canis lupus baileyi"
                                                 required
                                             />
                                         </div>
@@ -442,9 +472,9 @@ export default function Profile() {
                                             <textarea
                                                 className="form-control"
                                                 rows="4"
-                                                value={contributionForm.description}
-                                                onChange={(e) => setContributionForm({...contributionForm, description: e.target.value})}
-                                                placeholder="Describe the species, its characteristics, and importance..."
+                                                    value={contributionForm.descripcion}
+                                                    onChange={(e) => setContributionForm({...contributionForm, descripcion: e.target.value})}
+                                                    placeholder="Describe the species, its characteristics, and importance..."
                                                 required
                                             />
                                         </div>
@@ -455,46 +485,53 @@ export default function Profile() {
                                                 <input
                                                     type="text"
                                                     className="form-control"
-                                                    value={contributionForm.location}
-                                                    onChange={(e) => setContributionForm({...contributionForm, location: e.target.value})}
+                                                    value={contributionForm.top_lugares}
+                                                    onChange={(e) => setContributionForm({...contributionForm, top_lugares: e.target.value})}
                                                     placeholder="e.g., Sierra Madre Occidental, Mexico"
                                                     required
                                                 />
                                             </div>
                                             <div className="col-md-6 mb-3">
-                                                <label className="form-label fw-bold">Habitat Type *</label>
+                                                <label className="form-label fw-bold">Taxon SIS ID (optional)</label>
                                                 <input
-                                                    type="text"
+                                                    type="number"
                                                     className="form-control"
-                                                    value={contributionForm.habitat}
-                                                    onChange={(e) => setContributionForm({...contributionForm, habitat: e.target.value})}
-                                                    placeholder="e.g., Mountain forests, grasslands"
-                                                    required
+                                                    value={contributionForm.id_taxon_sis}
+                                                    onChange={(e) => setContributionForm({...contributionForm, id_taxon_sis: e.target.value})}
+                                                    placeholder="e.g., 12345"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="row">
                                             <div className="col-md-6 mb-3">
-                                                <label className="form-label fw-bold">Main Threats *</label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control"
-                                                    value={contributionForm.threats}
-                                                    onChange={(e) => setContributionForm({...contributionForm, threats: e.target.value})}
-                                                    placeholder="e.g., Habitat loss, human conflict"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="col-md-6 mb-3">
-                                                <label className="form-label fw-bold">Image URL (Optional)</label>
+                                                <label className="form-label fw-bold">Main Photo URL (Optional)</label>
                                                 <input
                                                     type="url"
                                                     className="form-control"
-                                                    value={contributionForm.imageUrl}
-                                                    onChange={(e) => setContributionForm({...contributionForm, imageUrl: e.target.value})}
+                                                    value={contributionForm.foto_principal}
+                                                    onChange={(e) => setContributionForm({...contributionForm, foto_principal: e.target.value})}
                                                     placeholder="https://example.com/species-image.jpg"
                                                 />
+                                            </div>
+                                            <div className="col-md-6 mb-3">
+                                                <label className="form-label fw-bold">iNaturalist / GBIF IDs (optional)</label>
+                                                <div className="d-flex gap-2">
+                                                    <input
+                                                        type="number"
+                                                        className="form-control"
+                                                        value={contributionForm.inat_id}
+                                                        onChange={(e) => setContributionForm({...contributionForm, inat_id: e.target.value})}
+                                                        placeholder="iNaturalist ID"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        className="form-control"
+                                                        value={contributionForm.gbif_id}
+                                                        onChange={(e) => setContributionForm({...contributionForm, gbif_id: e.target.value})}
+                                                        placeholder="GBIF ID"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
 
