@@ -414,11 +414,8 @@ app.get('/api/species/filters', async (req, res) => {
     }
 });
 
-// Admin routes - Note: These require NextAuth session, simplified for Express-only API
 app.get('/api/admin/check', async (req, res) => {
     try {
-        // For Express-only API, we'll return isAdmin: false since session management is in Next.js
-        // This endpoint exists for compatibility but admin checks should be done client-side
         res.json({ isAdmin: false });
     } catch (error) {
         console.error('Error checking admin status:', error);

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { apiCall } from '../../lib/apiUtils';
 
 export default function Contact() {
     const [submitted, setSubmitted] = useState(false);
