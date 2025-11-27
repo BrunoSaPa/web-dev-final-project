@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { connectToDatabase } from './lib/mongodb-express.js';
@@ -461,6 +462,11 @@ app.post('/api/admin/approve', async (req, res) => {
     }
 });
 
+// Test route
+app.get('/api/test', (req, res) => {
+    res.json({ success: true, message: 'Express server is working!', mongoUri: process.env.MONGODB_URI ? 'Connected' : 'Not found' });
+});
+
 // Contact route
 app.post('/api/contact', async (req, res) => {
     try {
@@ -473,8 +479,25 @@ app.post('/api/contact', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Express server running on port ${PORT}`);
+// Error handling
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('SIGINT', () => {
+    console.log('Server shutting down...');
+    process.exit(0);
+});
+
+app.listen(PORT, '127.0.0.1', () => {
+    console.log(`Express server running on http://127.0.0.1:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`MongoDB URI available: ${!!process.env.MONGODB_URI}`);
+    console.log(`Process ID: ${process.pid}`);
 });
 
 export default app;

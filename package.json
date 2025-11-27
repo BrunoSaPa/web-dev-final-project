@@ -9,13 +9,15 @@
     "start": "next start",
     "lint": "eslint",
     "express": "node server.js",
-    "dev-all": "concurrently \"npm run dev\" \"npm run express\""
+    "express:dev": "nodemon server.js",
+    "dev-all": "concurrently \"npm run dev\" \"npm run express:dev\""
   },
   "dependencies": {
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mongodb": "^7.0.0",
     "mongoose": "^9.0.0",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "eslint": "^9",
-    "eslint-config-next": "16.0.4"
+    "eslint-config-next": "16.0.4",
+    "nodemon": "^3.1.11"
   }
 }
