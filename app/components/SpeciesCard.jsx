@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 export default function SpeciesCard({ species }) {
     const s = species;
+    // console.log('SpeciesCard received:', s.scientificName, s.statusLabel);
 
     const handleImageError = (e) => {
         e.currentTarget.src = '/images/default.png';
@@ -161,11 +162,21 @@ export default function SpeciesCard({ species }) {
                     ) : (
                         <h5 className="card-title mb-2">{s.scientificName}</h5>
                     )}
-                    <p className="card-text mb-3">
+                    
+                    <div className="mb-3">
                         <span className={`status-badge ${statusColor.badge}`} style={{ backgroundColor: statusColor.light, color: statusColor.text }}>
                             {s.statusLabel}
                         </span>
-                    </p>
+                    </div>
+
+                    {s.estados && s.estados.length > 0 && (
+                        <div className="mb-3 small text-muted">
+                            <i className="bi bi-geo-alt-fill me-1 text-success"></i>
+                            {s.estados.slice(0, 2).map(e => e.charAt(0).toUpperCase() + e.slice(1)).join(', ')}
+                            {s.estados.length > 2 && '...'}
+                        </div>
+                    )}
+
                     <Link
                         href={`/especie/${encodeURIComponent(s.scientificName)}`}
                         className="btn btn-see-more mt-auto fw-semibold"

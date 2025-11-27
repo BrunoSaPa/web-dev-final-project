@@ -168,9 +168,17 @@ app.get('/api/species', async (req, res) => {
             }
 
             let taxonomy = {};
+            let category = s.categoria_lista_roja;
+
             if (s.json_completo) {
                 try {
                     const jsonData = JSON.parse(s.json_completo);
+                    
+                    // Fallback for category if missing in top-level
+                    if (!category && jsonData.categoria_lista_roja) {
+                        category = jsonData.categoria_lista_roja;
+                    }
+
                     if (jsonData.taxonomia) {
                         taxonomy = {
                             reino: jsonData.taxonomia.reino,
@@ -211,8 +219,8 @@ app.get('/api/species', async (req, res) => {
                 nombre_comun: s.nombre_comun,
                 scientificName: s.nombre_cientifico,
                 commonName: s.nombre_comun,
-                statusLabel: s.categoria_lista_roja,
-                categoria_lista_roja: s.categoria_lista_roja,
+                statusLabel: category || 'Not Assessed',
+                categoria_lista_roja: category || 'Not Assessed',
                 image: imagen,
                 fotos: s.fotos || [],
                 descripcion: s.descripcion || '',

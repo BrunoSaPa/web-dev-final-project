@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 
 export default function SpeciesDetailClient({ species }) {
+    console.log('SpeciesDetailClient received species:', species);
     const [loading, setLoading] = useState(true);
     const [wikiSummary, setWikiSummary] = useState(null);
     const [activeImage, setActiveImage] = useState(species.foto_principal || species.foto_1 || '/images/default.png');

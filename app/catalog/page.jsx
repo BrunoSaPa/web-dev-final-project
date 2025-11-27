@@ -32,6 +32,11 @@ export default async function Catalog({ searchParams }) {
         orden,
         familia
     });
+    
+    if (species && species.length > 0) {
+        console.log('Catalog species[0]:', species[0].scientificName, 'Status:', species[0].statusLabel);
+    }
+
     const currentFilter = status || 'all';
 
     return (
