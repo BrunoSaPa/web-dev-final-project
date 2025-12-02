@@ -2,16 +2,19 @@
 
 import Link from 'next/link';
 
+// Species card component - displays individual species in a grid layout
 export default function SpeciesCard({ species }) {
     const s = species;
-    // console.log('SpeciesCard received:', s.scientificName, s.statusLabel);
 
+    // Handle broken image links by showing default image
     const handleImageError = (e) => {
         e.currentTarget.src = '/images/default.png';
     };
 
+    // Map conservation status to Bootstrap badge color and hex colors
     const getStatusColor = (status) => {
         const statusLower = (status || '').toLowerCase();
+        // Return badge class and hex colors based on conservation status
         if (statusLower.includes('critically')) return { badge: 'bg-danger', light: '#D32F2F', text: '#FFFFFF' };
         else if (statusLower.includes('endangered')) return { badge: 'bg-warning text-dark', light: '#F57C00', text: '#FFFFFF' };
         else if (statusLower.includes('vulnerable')) return { badge: 'bg-warning', light: '#FBC02D', text: '#212121' };
@@ -20,6 +23,7 @@ export default function SpeciesCard({ species }) {
         return { badge: 'bg-secondary', light: '#757575', text: '#FFFFFF' };
     };
 
+    // Get color configuration for this species' status
     const statusColor = getStatusColor(s.statusLabel);
 
     return (

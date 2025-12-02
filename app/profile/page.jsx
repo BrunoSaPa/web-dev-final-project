@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { apiCall } from '../../lib/apiUtils'
 
+// User profile page - protected route for authenticated users to manage contributions
 export default function Profile() {
+    // Get current user session and require authentication
     const { data: session, status } = useSession({
         required: true,
         onUnauthenticated() {
@@ -12,10 +14,11 @@ export default function Profile() {
         },
     })
     
-
     console.log('Profile page session:', { status, session });
 
+    // UI state management
     const [activeTab, setActiveTab] = useState('profile')
+    // Form state for submitting new species contribution
     const [contributionForm, setContributionForm] = useState({
         nombre_cientifico: '',
         nombre_comun: '',
@@ -31,16 +34,18 @@ export default function Profile() {
         state: 'pending'
     })
 
+    // User's submitted species and loading state
     const [contributions, setContributions] = useState([])
     const [loading, setLoading] = useState(true)
 
-    //fetch from database
+    // Fetch user's species contributions from API
     useEffect(() => {
         const fetchUserContributions = async () => {
             if (!session?.user?.email) return
             
             try {
                 setLoading(true)
+                // Query for species added by current user
                 const response = await apiCall(`/api/species?added_by=${encodeURIComponent(session.user.email)}&limit=100`)
                 if (response.ok) {
                     const data = await response.json()

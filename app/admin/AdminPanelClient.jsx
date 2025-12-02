@@ -2,16 +2,19 @@
 import { useState, useEffect } from 'react'
 import { apiCall } from '../../lib/apiUtils'
 
+// Admin panel component for reviewing and approving user-submitted species
 export default function AdminPanelClient({ session }) {
+    // State for pending submissions and UI
     const [pendingContributions, setPendingContributions] = useState([])
     const [loading, setLoading] = useState(true)
     const [processingId, setProcessingId] = useState(null)
 
-    // Fetch pending contributions
+    // Fetch pending species contributions on component mount
     useEffect(() => {
         const fetchPendingContributions = async () => {
             try {
                 setLoading(true)
+                // Query for species with pending state
                 const response = await apiCall('/api/species?state=pending&limit=100')
                 if (response.ok) {
                     const data = await response.json()
@@ -29,11 +32,14 @@ export default function AdminPanelClient({ session }) {
         fetchPendingContributions()
     }, [])
 
+    // Handle approval or rejection of a species submission
     const handleApproval = async (speciesId, action) => {
+        // Prevent multiple simultaneous requests
         if (processingId) return
         
         setProcessingId(speciesId)
         try {
+            // Send approval/rejection to backend
             const response = await apiCall('/api/admin/approve', {
                 method: 'POST',
                 headers: {
@@ -46,7 +52,7 @@ export default function AdminPanelClient({ session }) {
             })
             
             if (response.ok) {
-                //remove from pending list
+                // Remove species from pending list after approval/rejection
                 setPendingContributions(prev => 
                     prev.filter(species => species._id !== speciesId)
                 )

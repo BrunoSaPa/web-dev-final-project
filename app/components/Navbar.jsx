@@ -4,16 +4,20 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { apiCall } from '../../lib/apiUtils';
 
+// Navigation bar component with authentication and admin features
 export default function Navbar() {
+    // Get current user session from NextAuth
     const { data: session, status } = useSession();
+    // Admin status and profile image error state
     const [isAdmin, setIsAdmin] = useState(false);
     const [imageError, setImageError] = useState(false);
     
+    // Check if logged-in user is an admin
     useEffect(() => {
         const checkAdminStatus = async () => {
             if (session?.user?.email) {
                 try {
-                    // Use direct fetch to hit Next.js API route instead of Express
+                    // Fetch admin status from Next.js API route
                     const response = await fetch('/api/admin/check');
                     if (response.ok) {
                         const data = await response.json();

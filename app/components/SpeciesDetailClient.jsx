@@ -3,22 +3,26 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 
+// Client-side component for displaying detailed species information
 export default function SpeciesDetailClient({ species }) {
     console.log('SpeciesDetailClient received species:', species);
+    
+    // State management
     const [loading, setLoading] = useState(true);
     const [wikiSummary, setWikiSummary] = useState(null);
     const [activeImage, setActiveImage] = useState(species.foto_principal || species.foto_1 || '/images/default.png');
+    // Map references for Leaflet integration
     const mapInstanceRef = useRef(null);
     const layerControlRef = useRef(null);
     const heatmapLayerRef = useRef(null);
 
-    // Constants
+    // iNaturalist API configuration constants
     const API_INAT = 'https://api.inaturalist.org/v1';
     const MEXICO_PLACE_ID = 6793;
     const MEXICO_CENTER = [23.6345, -102.5528];
     const MEXICO_ZOOM = 5;
 
-    // Parse JSON data
+    // Parse complete JSON metadata
     let parsedData = null;
     try {
         parsedData = species.json_completo ? JSON.parse(species.json_completo) : null;
@@ -26,13 +30,15 @@ export default function SpeciesDetailClient({ species }) {
         console.error('Error parsing json_completo:', e);
     }
 
+    // Extract taxonomy information from parsed data
     const taxonomy = parsedData?.taxonomia || {};
 
-    // Parse top lugares
+    // Parse top locations where species is observed
     let topLocations = [];
     try {
         if (species.top_lugares) {
             const parsed = JSON.parse(species.top_lugares);
+            // Format: "Location Name (count)"
             topLocations = parsed.map(loc => {
                 const match = loc.match(/^(.+?)\s*\((\d+)\)$/);
                 return match ? { name: match[1], count: parseInt(match[2]) } : { name: loc, count: 0 };

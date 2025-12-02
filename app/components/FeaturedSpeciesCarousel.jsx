@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 
+// Featured species carousel - displays highlighted species on homepage
 export default function FeaturedSpeciesCarousel({ species }) {
+    // Handle missing or broken species images
     const handleImageError = (e) => {
         e.currentTarget.src = '/images/default.png';
     };

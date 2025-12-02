@@ -4,7 +4,19 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getFilterOptions } from '@/lib/api';
 
-export default function SpeciesFilters({ currentStatus, currentSearch, currentPage, currentEstado, currentReino, currentFilo, currentClase, currentOrden, currentFamilia }) {
+// Advanced filtering component for species catalog
+export default function SpeciesFilters({ 
+    currentStatus, 
+    currentSearch, 
+    currentPage, 
+    currentEstado, 
+    currentReino, 
+    currentFilo, 
+    currentClase, 
+    currentOrden, 
+    currentFamilia 
+}) {
+    // Search and filter state variables
     const [searchTerm, setSearchTerm] = useState(currentSearch || '');
     const [selectedStatus, setSelectedStatus] = useState(currentStatus || '');
     const [selectedEstado, setSelectedEstado] = useState(currentEstado || '');
@@ -13,8 +25,10 @@ export default function SpeciesFilters({ currentStatus, currentSearch, currentPa
     const [selectedClase, setSelectedClase] = useState(currentClase || '');
     const [selectedOrden, setSelectedOrden] = useState(currentOrden || '');
     const [selectedFamilia, setSelectedFamilia] = useState(currentFamilia || '');
+    // UI state
     const [isSearching, setIsSearching] = useState(false);
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+    // Available options for each filter dropdown
     const [filterOptions, setFilterOptions] = useState({
         estados: [],
         reino: [],
@@ -25,17 +39,7 @@ export default function SpeciesFilters({ currentStatus, currentSearch, currentPa
         status: []
     });
 
-    const statuses = [
-        'Critically Endangered',
-        'Endangered',
-        'Vulnerable',
-        'Near Threatened',
-        'Least Concern',
-        'Data Deficient',
-        'Extinct',
-        'Extinct in the Wild'
-    ];
-
+    // Load filter options from API on component mount
     useEffect(() => {
         const loadFilterOptions = async () => {
             const options = await getFilterOptions();
@@ -44,6 +48,7 @@ export default function SpeciesFilters({ currentStatus, currentSearch, currentPa
         loadFilterOptions();
     }, []);
 
+    // Handle search form submission
     const handleSearch = (e) => {
         e.preventDefault();
         setIsSearching(true);
@@ -255,7 +260,7 @@ export default function SpeciesFilters({ currentStatus, currentSearch, currentPa
                                         onChange={(e) => setSelectedStatus(e.target.value)}
                                     >
                                         <option value="">All Statuses</option>
-                                        {statuses.map((status) => (
+                                        {filterOptions.status && filterOptions.status.map((status) => (
                                             <option key={status} value={status}>
                                                 {status}
                                             </option>
