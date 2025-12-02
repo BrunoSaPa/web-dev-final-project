@@ -10,7 +10,7 @@ export default function SpeciesDetailClient({ species }) {
     // State management
     const [loading, setLoading] = useState(true);
     const [wikiSummary, setWikiSummary] = useState(null);
-    const [activeImage, setActiveImage] = useState(species.foto_principal || species.foto_1 || '/images/default.png');
+    const [activeImage, setActiveImage] = useState(species.foto_1 || species.foto_principal || '/images/default.png');
     // Map references for Leaflet integration
     const mapInstanceRef = useRef(null);
     const layerControlRef = useRef(null);
@@ -48,18 +48,18 @@ export default function SpeciesDetailClient({ species }) {
         console.error('Error parsing top_lugares:', e);
     }
 
-    // Combine all images
+    // Get all available images
     const allImages = [
-        species.foto_principal,
         species.foto_1,
         species.foto_2,
         species.foto_3,
-        species.foto_4,
-        ...(species.fotos || [])
-    ].filter(img => img && img !== '/images/default.png');
+        species.foto_4
+    ].filter(img => img && img !== null && img !== '');
 
-    const uniqueImages = [...new Set(allImages)];
-    if (uniqueImages.length === 0) uniqueImages.push('/images/default.png');
+    // Get thumbnail images (all except the currently active one)
+    const getThumbnails = () => {
+        return allImages.filter(img => img !== activeImage);
+    };
 
     useEffect(() => {
         const loadLeaflet = async () => {
@@ -727,23 +727,24 @@ export default function SpeciesDetailClient({ species }) {
                             <div className="gallery-card">
                                 <div className="main-image-container" style={{ height: '320px' }}>
                                     <img
-                                        src={activeImage}
+                                        src={activeImage || '/images/default.png'}
                                         className="main-image"
                                         alt={species.nombre_comun}
                                         onError={(e) => e.target.src = '/images/default.png'}
                                     />
                                 </div>
-                                {uniqueImages.length > 1 && (
+                                {getThumbnails().length > 0 && (
                                     <div className="thumbnail-strip">
                                         <div className="d-flex gap-2 overflow-auto flex-wrap justify-content-center">
-                                            {uniqueImages.slice(0, 4).map((img, idx) => (
+                                            {getThumbnails().map((img, idx) => (
                                                 <img
                                                     key={idx}
                                                     src={img}
-                                                    className={`thumbnail ${activeImage === img ? 'active' : ''}`}
+                                                    className="thumbnail"
                                                     onClick={() => setActiveImage(img)}
                                                     alt={`View ${idx + 1}`}
                                                     onError={(e) => e.target.src = '/images/default.png'}
+                                                    style={{ cursor: 'pointer' }}
                                                 />
                                             ))}
                                         </div>
