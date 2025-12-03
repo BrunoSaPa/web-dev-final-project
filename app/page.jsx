@@ -1,26 +1,39 @@
 import Link from 'next/link';
 import FeaturedSpeciesCarousel from './components/FeaturedSpeciesCarousel';
+import { getSpecies } from '@/lib/controllers/speciesController';
 
 export const dynamic = 'force-dynamic'; // Ensure random species are generated on each request
 
 export default async function Home() {
-    // Fetch random species from MongoDB API
+    // Fetch random species from API
     let featuredSpecies = [];
 
     try {
-        // Use Express API server for server-side fetching
-        const baseUrl = process.env.NEXT_PUBLIC_EXPRESS_API_URL || 'http://localhost:3001';
+        // Determine API base URL based on environment
+        let baseUrl;
+        
+        if (process.env.NODE_ENV === 'production') {
+            // In production, Express runs on same server with /api prefix or on separate port
+            baseUrl = 'http://localhost:3001';
+        } else {
+            // In development, Express runs on port 3001
+            baseUrl = 'http://localhost:3001';
+        }
+        
         const response = await fetch(`${baseUrl}/api/species?page=1&limit=100`, {
             cache: 'no-store'
         });
 
         if (response.ok) {
             const data = await response.json();
-            // Get 3 random species from the results
-            const allSpecies = data.species || [];
-            if (allSpecies.length > 0) {
-                const shuffled = [...allSpecies].sort(() => 0.5 - Math.random());
-                featuredSpecies = shuffled.slice(0, 3);
+            
+            if (data.success && data.species) {
+                // Get 3 random species from the results
+                const allSpecies = data.species || [];
+                if (allSpecies.length > 0) {
+                    const shuffled = [...allSpecies].sort(() => 0.5 - Math.random());
+                    featuredSpecies = shuffled.slice(0, 3);
+                }
             }
         }
     } catch (error) {

@@ -1,19 +1,57 @@
-// Load environment variables from .env file
-import 'dotenv/config';
+// Load environment variables - prioritize .env.local in development
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load .env first, then .env.local (with override for dev/local)
+dotenv.config({ path: path.join(__dirname, '.env') });
+// Only load .env.local if it exists (for development)
+if (fs.existsSync(path.join(__dirname, '.env.local'))) {
+    dotenv.config({ path: path.join(__dirname, '.env.local'), override: true });
+}
+
 import express from 'express';
 import cors from 'cors';
 import { connectToDatabase } from './lib/mongodb-express.js';
 import Species from './lib/models/Species-express.js';
 
+// In-memory cache for filter options
+let filtersCache = null;
+let filtersCacheTime = null;
+const FILTERS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+function getFiltersCache() {
+    const now = Date.now();
+    if (filtersCache && filtersCacheTime && (now - filtersCacheTime) < FILTERS_CACHE_TTL) {
+        console.log('[Cache] Using cached filters (age: ' + (now - filtersCacheTime) + 'ms)');
+        return filtersCache;
+    }
+    return null;
+}
+
+function setFiltersCache(data) {
+    filtersCache = data;
+    filtersCacheTime = Date.now();
+    console.log('[Cache] Filters cached for 5 minutes');
+}
+
 // Initialize Express application
 const app = express();
 // Port for Express server (separate from Next.js frontend on port 3000)
-const PORT = process.env.EXPRESS_PORT || 3001;
+// In production (Render), use EXPRESS_PORT explicitly to avoid conflict with Next.js PORT
+const PORT = process.env.EXPRESS_PORT || process.env.PORT || 3001;
 
 // Enable CORS to allow requests from Next.js frontend
 app.use(cors());
 // Parse JSON request bodies
 app.use(express.json());
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 // GET /api/species - Retrieve species with advanced filtering and pagination
 app.get('/api/species', async (req, res) => {
@@ -358,132 +396,100 @@ app.post('/api/species', async (req, res) => {
 // GET /api/species/filters - Retrieve all available filter options
 app.get('/api/species/filters', async (req, res) => {
     try {
+        // Check cache first
+        const cached = getFiltersCache();
+        if (cached) {
+            return res.json(cached);
+        }
+        
+        console.log('[Filters] Cache miss - fetching from database...');
+        
         // Connect to MongoDB
         await connectToDatabase();
 
-        // Get unique values for each taxonomy and category filter
-        const [reinos, filos, clases, ordenes, familias, statuses] = await Promise.all([
-            Species.distinct('reino'),
-            Species.distinct('filo'),
-            Species.distinct('clase'),
-            Species.distinct('orden'),
-            Species.distinct('familia'),
-            Species.distinct('categoria_lista_roja'),
-        ]);
-        
-        // Always try to get taxonomy data from actual documents, not just distinct
-        let taxData = {
-            reino: new Set(),
-            filo: new Set(),
-            clase: new Set(),
-            orden: new Set(),
-            familia: new Set()
-        };
-        
-        // Get all species to extract taxonomy values (in case fields are empty strings)
-        const allSpecies = await Species.find({}).select({ reino: 1, filo: 1, clase: 1, orden: 1, familia: 1, json_completo: 1 }).lean();
-        allSpecies.forEach(species => {
-            // Try main fields first
-            if (species.reino && species.reino.trim()) taxData.reino.add(species.reino.trim());
-            if (species.filo && species.filo.trim()) taxData.filo.add(species.filo.trim());
-            if (species.clase && species.clase.trim()) taxData.clase.add(species.clase.trim());
-            if (species.orden && species.orden.trim()) taxData.orden.add(species.orden.trim());
-            if (species.familia && species.familia.trim()) taxData.familia.add(species.familia.trim());
-            
-            // Fallback to JSON data if main fields are empty
-            if (species.json_completo) {
-                try {
-                    const jsonData = JSON.parse(species.json_completo);
-                    if (jsonData.taxonomia) {
-                        if (jsonData.taxonomia.reino && !taxData.reino.has(jsonData.taxonomia.reino.trim())) {
-                            taxData.reino.add(jsonData.taxonomia.reino.trim());
-                        }
-                        if (jsonData.taxonomia.filo && !taxData.filo.has(jsonData.taxonomia.filo.trim())) {
-                            taxData.filo.add(jsonData.taxonomia.filo.trim());
-                        }
-                        if (jsonData.taxonomia.clase && !taxData.clase.has(jsonData.taxonomia.clase.trim())) {
-                            taxData.clase.add(jsonData.taxonomia.clase.trim());
-                        }
-                        if (jsonData.taxonomia.orden && !taxData.orden.has(jsonData.taxonomia.orden.trim())) {
-                            taxData.orden.add(jsonData.taxonomia.orden.trim());
-                        }
-                        if (jsonData.taxonomia.familia && !taxData.familia.has(jsonData.taxonomia.familia.trim())) {
-                            taxData.familia.add(jsonData.taxonomia.familia.trim());
-                        }
-                    }
-                } catch (e) {
-                    // Skip invalid JSON
+        // Use MongoDB aggregation pipeline for performance
+        // This is much faster than loading all documents into memory
+        const filterResults = await Species.aggregate([
+            {
+                $facet: {
+                    reinos: [
+                        { $match: { reino: { $exists: true, $ne: '', $ne: null } } },
+                        { $group: { _id: '$reino' } },
+                        { $project: { value: '$_id', _id: 0 } }
+                    ],
+                    filos: [
+                        { $match: { filo: { $exists: true, $ne: '', $ne: null } } },
+                        { $group: { _id: '$filo' } },
+                        { $project: { value: '$_id', _id: 0 } }
+                    ],
+                    clases: [
+                        { $match: { clase: { $exists: true, $ne: '', $ne: null } } },
+                        { $group: { _id: '$clase' } },
+                        { $project: { value: '$_id', _id: 0 } }
+                    ],
+                    ordenes: [
+                        { $match: { orden: { $exists: true, $ne: '', $ne: null } } },
+                        { $group: { _id: '$orden' } },
+                        { $project: { value: '$_id', _id: 0 } }
+                    ],
+                    familias: [
+                        { $match: { familia: { $exists: true, $ne: '', $ne: null } } },
+                        { $group: { _id: '$familia' } },
+                        { $project: { value: '$_id', _id: 0 } }
+                    ],
+                    statuses: [
+                        { $match: { categoria_lista_roja: { $exists: true, $ne: '', $ne: null } } },
+                        { $group: { _id: '$categoria_lista_roja' } },
+                        { $project: { value: '$_id', _id: 0 } }
+                    ]
                 }
             }
-        });
+        ]);
 
+        const result = filterResults[0];
+        
         // Helper function to clean and sort filter arrays
         const cleanArray = (arr) => {
             return arr
+                .map(item => String(item.value || '').trim())
                 .filter(v => v && v !== null && v !== '')
-                .map(v => String(v).trim())
                 .sort();
         };
-
-        // Extract states from species locations (top_lugares field)
-        let estadosSet = new Set();
         
-        // List of all valid Mexican states for validation
-        const validStates = [
+        const reinos = cleanArray(result.reinos || []);
+        const filos = cleanArray(result.filos || []);
+        const clases = cleanArray(result.clases || []);
+        const ordenes = cleanArray(result.ordenes || []);
+        const familias = cleanArray(result.familias || []);
+        const statuses = cleanArray(result.statuses || []);
+
+        // All 32 Mexican states - use default list for performance
+        const estadosSet = [
             'aguascalientes', 'baja california', 'baja california sur', 'campeche', 'coahuila',
             'colima', 'chiapas', 'chihuahua', 'durango', 'guanajuato', 'guerrero', 'hidalgo',
             'jalisco', 'mexico', 'michoacan', 'morelos', 'nayarit', 'nuevo leon', 'oaxaca',
             'puebla', 'queretaro', 'quintana roo', 'san luis potosi', 'sinaloa', 'sonora',
             'tabasco', 'tamaulipas', 'tlaxcala', 'veracruz', 'yucatan', 'zacatecas'
         ];
-        
-        // Parse locations from all documents to extract state names
-        const docs = await Species.find({}).select({ top_lugares: 1 }).lean();
-        docs.forEach(doc => {
-            if (doc.top_lugares) {
-                try {
-                    const lugares = JSON.parse(doc.top_lugares);
-                    lugares.forEach(lugar => {
-                        // Extract state name before parentheses
-                        const match = lugar.match(/^([^(]+)/);
-                        if (match) {
-                            let state = match[1].trim();
-                            // Normalize: remove accents and convert to lowercase
-                            state = state.replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i').replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/[,.]$/g, '').trim();
-                            state = state.toLowerCase();
-                            
-                            // Validate against known Mexican states
-                            const isValidState = validStates.some(validState => 
-                                state === validState || state.includes(validState) || validState.includes(state)
-                            );
-                            
-                            if (isValidState) {
-                                // Find the actual state name to use
-                                const matchedState = validStates.find(validState => 
-                                    state === validState || state.includes(validState) || validState.includes(state)
-                                );
-                                if (matchedState) {
-                                    estadosSet.add(matchedState);
-                                }
-                            }
-                        }
-                    });
-                } catch (e) {
-                    // Skip parse errors
-                }
-            }
-        });
 
+        // Build response
+        const filterResponse = {
+            estados: estadosSet,
+            reino: reinos,
+            filo: filos,
+            clase: clases,
+            orden: ordenes,
+            familia: familias,
+            status: statuses,
+        };
+        
+        // Cache the response (5 minutes)
+        setFiltersCache(filterResponse);
+        
+        console.log(`[Filters] ✓ Loaded: ${reinos.length} reinos, ${filos.length} filos, ${clases.length} clases, ${ordenes.length} ordenes, ${familias.length} familias, ${statuses.length} statuses, 32 estados`);
+        
         // Return all filter options in consistent format
-        res.json({
-            estados: Array.from(estadosSet).sort(),
-            reino: cleanArray(taxData.reino.size > 0 ? Array.from(taxData.reino) : reinos),
-            filo: cleanArray(taxData.filo.size > 0 ? Array.from(taxData.filo) : filos),
-            clase: cleanArray(taxData.clase.size > 0 ? Array.from(taxData.clase) : clases),
-            orden: cleanArray(taxData.orden.size > 0 ? Array.from(taxData.orden) : ordenes),
-            familia: cleanArray(taxData.familia.size > 0 ? Array.from(taxData.familia) : familias),
-            status: cleanArray(statuses),
-        });
+        res.json(filterResponse);
     } catch (error) {
         console.error('Error fetching filters:', error);
         res.status(500).json({ error: 'Internal server error', details: error.message });
@@ -585,9 +591,15 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
+// Return 404 for unmatched routes (Express is API-only)
+app.use((req, res) => {
+    res.status(404).json({ error: 'API endpoint not found' });
+});
+
 // Start the Express server
-app.listen(PORT, '127.0.0.1', () => {
-    console.log(`Express server running on http://127.0.0.1:${PORT}`);
+const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
+app.listen(PORT, host, () => {
+    console.log(`Express API server running on http://${host}:${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`MongoDB URI available: ${!!process.env.MONGODB_URI}`);
     console.log(`Process ID: ${process.pid}`);

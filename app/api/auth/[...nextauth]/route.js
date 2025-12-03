@@ -3,11 +3,23 @@ import GoogleProvider from 'next-auth/providers/google'
 
 // NextAuth configuration with Google OAuth provider
 export const authOptions = {
+    // Configure session and JWT settings
+    session: {
+        strategy: 'jwt',
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+    },
+    // Secret for JWT encryption - required for production
+    secret: process.env.NEXTAUTH_SECRET || 'development-secret-key-change-in-production',
+    pages: {
+        signIn: '/auth/signin',
+        error: '/auth/error',
+    },
     // Define authentication providers
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            allowDangerousEmailAccountLinking: true,
         })
     ],
     // Callbacks for customizing token and session behavior

@@ -42,8 +42,33 @@ export default function SpeciesFilters({
     // Load filter options from API on component mount
     useEffect(() => {
         const loadFilterOptions = async () => {
-            const options = await getFilterOptions();
-            setFilterOptions(options);
+            try {
+                // First, warmup the Express server (wait for it to be ready)
+                console.log('[SpeciesFilters] Starting warmup...');
+                try {
+                    await fetch('/api/warmup', { cache: 'no-store' });
+                    console.log('[SpeciesFilters] Warmup complete');
+                } catch (e) {
+                    console.log('[SpeciesFilters] Warmup fetch error:', e.message);
+                }
+                
+                // Now load filter options
+                console.log('[SpeciesFilters] Loading filter options...');
+                const options = await getFilterOptions();
+                console.log('[SpeciesFilters] Filter options loaded:', options);
+                setFilterOptions(options);
+            } catch (error) {
+                console.error('[SpeciesFilters] Error loading filters:', error);
+                setFilterOptions({
+                    estados: [],
+                    reino: [],
+                    filo: [],
+                    clase: [],
+                    orden: [],
+                    familia: [],
+                    status: []
+                });
+            }
         };
         loadFilterOptions();
     }, []);

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: web-dev-final-project
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: EMAIL_ADMIN
+        value: brunosanchezpadilla@gmail.com
+      - key: GOOGLE_CLIENT_ID
+        scope: all
+        value: 689987098402-f6ujksqcu3l0vfbalc90q3bblpltqhf9.apps.googleusercontent.com
+      - key: GOOGLE_CLIENT_SECRET
+        scope: all
+        sync: false
+      - key: MONGODB_URI
+        scope: all
+        sync: false
+      - key: NEXTAUTH_SECRET
+        scope: all
+        sync: false
+      - key: NEXTAUTH_URL
+        value: https://web-dev-final-project-k6xu.onrender.com
+      - key: NEXT_PUBLIC_EXPRESS_API_URL
+        value: /api

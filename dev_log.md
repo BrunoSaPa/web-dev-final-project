@@ -99,3 +99,58 @@ We completed the comprehensive final documentation of our project. We created al
 - Conclusion document with challenges, solutions, and design decisions
 - Real-world applications analysis
 - Personal reflections from all three team members
+
+## December 3 - Production Optimization and Render Deployment
+
+**Mateo**: I optimized the application for production deployment on Render. Key improvements:
+
+### Production Architecture
+- **Dual-Process Model**: `start-prod.js` orchestrates both Express backend (port 3001) and Next.js frontend (port 3000)
+- **MongoDB**: Connected via MongoDB Atlas with connection pooling and proper error handling
+- **Caching Strategy**: 5-minute in-memory cache for filter options to reduce database queries
+
+### Performance Optimizations
+1. **Filter Endpoint Optimization**:
+   - Changed from loading all documents into memory to using MongoDB aggregation pipeline ($facet)
+   - Reduced query time from 5+ seconds to 500-800ms on first call
+   - Implemented in-memory caching with 5-minute TTL for subsequent calls
+   - Uses simplified state list (32 Mexican states) instead of parsing all documents
+
+2. **Next.js Routing Configuration**:
+   - Fixed critical issue where `next.config.mjs` rewrites were intercepting /api/* routes before Next.js could process them
+   - Restructured rewrites with `beforeFiles` (specific endpoints) and `afterFiles` (catch-all to Express)
+   - Created `/filters-data` endpoint outside /api path to avoid rewrite interception
+
+3. **Request Retry Logic**:
+   - Implemented exponential backoff with progressive timeouts (3-6.6 seconds)
+   - 12 retry attempts with progressive delays (200ms initial, +100ms each attempt)
+   - Graceful fallback to empty filter arrays if all retries fail
+
+### Key Files for Production
+- `server.js`: Express backend with optimized filter aggregation and MongoDB connection
+- `start-prod.js`: Production startup script with proper port configuration and startup delays
+- `next.config.mjs`: Route rewrites for Express proxying with corrected logic
+- `app/filters-data/route.js`: Fast filter endpoint with retry logic
+- `lib/api.js`: Client-side API utilities with conditional host resolution
+- `render.yaml`: Render deployment configuration
+
+### Environment Configuration
+- `EXPRESS_PORT=3001`: Backend server port
+- `MONGODB_URI`: MongoDB Atlas connection string (from Render secrets)
+- `NEXTAUTH_SECRET`: NextAuth.js session secret (from Render secrets)
+- `NODE_ENV=production`: Enables production-specific optimizations
+
+### Debugging and Monitoring
+- Server logs include timestamps and operation counters
+- Filter endpoint logs show aggregation results: reinos, filos, clases, ordenes, familias, statuses counts
+- Retry attempts are logged to trace connection issues
+- Cache hit/miss is logged for monitoring optimization effectiveness
+
+### Deployment Flow
+1. Render auto-deploys on git push to main
+2. Start-prod.js waits 5 seconds for Express MongoDB connection
+3. Express startup logs confirm "[Warmup] ✓ Express is ready!"
+4. Next.js then starts and can proxy requests to Express
+5. Filter endpoints respond with 500-800ms latency (first call), then instant with cache
+
+This optimization ensures the application performs well in production while maintaining all functionality across local development and Render deployment.

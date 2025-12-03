@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node start-prod.js",
+    "start:next": "next start",
     "lint": "eslint",
     "express": "node server.js",
     "express:dev": "nodemon server.js",
